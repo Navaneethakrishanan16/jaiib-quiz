@@ -1,0 +1,150 @@
+<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>JAIIB Practice</title>
+<style>
+:root{--bg:#fdf3f7;--card:#fff;--ink:#2b2030;--mute:#7b6a80;--pri:#b3326e;--ok:#12803f;--okbg:#e4f6ea;--bad:#c0392b;--badbg:#fdeaea;--line:#ecd9e3}
+@media (prefers-color-scheme:dark){:root{--bg:#1c141f;--card:#2a1f2e;--ink:#f4e9f3;--mute:#b3a0b6;--pri:#ec6fa6;--ok:#4ed087;--okbg:#17321f;--bad:#ff8a7a;--badbg:#3a1c1c;--line:#43324a}}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font-family:system-ui,Segoe UI,Arial,sans-serif;line-height:1.45}
+.wrap{max-width:680px;margin:0 auto;padding:16px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:20px;margin:14px 0}
+h1{margin:6px 0 2px;font-size:1.5rem;color:var(--pri)}h2{margin:0 0 10px;font-size:1.15rem}
+.mute{color:var(--mute);font-size:.9rem}
+input{width:100%;padding:12px;margin:6px 0 12px;border:1px solid var(--line);border-radius:10px;font-size:1rem;background:var(--bg);color:var(--ink)}
+button{font:inherit;cursor:pointer;border:0;border-radius:10px;padding:12px 16px;background:var(--pri);color:#fff;font-weight:600}
+button.alt{background:transparent;color:var(--pri);border:1px solid var(--pri)}
+button:disabled{opacity:.5;cursor:default}
+.row{display:flex;gap:10px;flex-wrap:wrap}.row>*{flex:1}
+.opt{display:block;width:100%;text-align:left;margin:8px 0;background:var(--bg);color:var(--ink);border:1.5px solid var(--line);font-weight:500}
+.opt.ok{background:var(--okbg);border-color:var(--ok);color:var(--ok)}
+.opt.bad{background:var(--badbg);border-color:var(--bad);color:var(--bad)}
+.msg{margin-top:12px;padding:14px;border-radius:12px;font-size:1.05rem}
+.msg.ok{background:var(--okbg);color:var(--ok)}.msg.bad{background:var(--badbg);color:var(--bad)}
+.msg small{display:block;color:var(--ink);margin-top:6px;opacity:.85}
+.bar{height:8px;background:var(--line);border-radius:6px;overflow:hidden}.bar i{display:block;height:100%;background:var(--pri);width:0}
+.top{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.err{color:var(--bad);min-height:1.2em}
+a.btn{display:inline-block;text-decoration:none;text-align:center;border-radius:10px;padding:12px 16px;background:transparent;color:var(--pri);border:1px solid var(--pri);font-weight:600}
+.hide{display:none}
+</style></head><body><div class="wrap">
+
+<section id="login" class="card">
+  <h1>JAIIB Practice 💖</h1><div class="mute">Login to start</div>
+  <label>ID</label><input id="uid" inputmode="numeric" autocomplete="username">
+  <label>Password</label><input id="pw" type="password" autocomplete="current-password">
+  <div class="err" id="lerr"></div>
+  <button id="lbtn" style="width:100%">Login</button>
+</section>
+
+<section id="home" class="card hide">
+  <div class="top"><h1>Choose a paper</h1><button class="alt" id="logout">Logout</button></div>
+  <div class="mute" id="stats"></div>
+  <div id="papers"></div>
+  <div class="row" style="margin-top:14px">
+    <button class="alt" id="retryWrong">Retry my wrong answers</button>
+    <a class="btn" href="JAIIB_Important_Questions.pdf" download>Download PDF</a>
+  </div>
+</section>
+
+<section id="quiz" class="card hide">
+  <div class="top"><div class="mute" id="qmeta"></div><button class="alt" id="quit">Quit</button></div>
+  <div class="bar"><i id="bar"></i></div>
+  <h2 id="qtext" style="margin-top:16px"></h2>
+  <div id="opts"></div>
+  <div id="fb"></div>
+  <button id="next" class="hide" style="width:100%;margin-top:12px">Next</button>
+</section>
+
+<section id="done" class="card hide">
+  <h1>Finished! 🎉</h1><h2 id="score"></h2><div id="doneMsg"></div>
+  <div class="row" style="margin-top:14px"><button id="again">Try again</button><button class="alt" id="homeBtn">Home</button></div>
+</section>
+
+</div>
+<script src="questions.js"></script>
+<script>
+// Change these two to rename / re-word the cheering. NAME is the pet name used in every message.
+const NAME = "wife";
+const CORRECT = [
+  `Super ${NAME}! 😘 Correct!`, `Wow ${NAME}, you nailed it! 😘😘`, `That is my ${NAME}! Brilliant! 😘🔥`,
+  `Perfect, ${NAME}! You will clear JAIIB for sure! 😘🏆`, `Yes ${NAME}! Keep going, you are unstoppable! 😘💪`
+];
+const WRONG = [
+  `Try a bit more, ${NAME}! 🤗 You can do it.`, `Almost, ${NAME}! 🤗 Remember this correct answer 👇`,
+  `No worries ${NAME}, every mistake is a lesson. Remember it! 🤗`, `Don't give up, ${NAME}! Next one is yours 🤗`,
+  `You can do it, ${NAME}! Note the right answer and you will never miss it again 🤗`
+];
+const pick = a => a[Math.floor(Math.random()*a.length)];
+const $ = id => document.getElementById(id);
+const store = {get(k,d){try{return JSON.parse(localStorage.getItem(k))??d}catch(e){return d}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
+// NOTE: static site, so this login is only a casual gate (anyone can read it in page source).
+const UID="162903", PW="jn05";
+const show = id => ["login","home","quiz","done"].forEach(s=>$(s).classList.toggle("hide",s!==id));
+const key = q => q.q;
+let list=[],i=0,right=0,locked=false;
+
+function home(){
+  const wrong=store.get("wrong",[]), best=store.get("best",{});
+  $("stats").textContent = wrong.length ? `${wrong.length} question(s) saved to revise` : "Pick a paper and start 💖";
+  $("retryWrong").disabled = !wrong.length;
+  $("papers").innerHTML = "";
+  const all = document.createElement("button"); all.className="opt";
+  all.textContent=`All papers mixed (${QUESTIONS.length} questions)` + (best.ALL!=null?`  · best ${best.ALL}`:"");
+  all.onclick=()=>start(QUESTIONS,"ALL"); $("papers").appendChild(all);
+  for(const k in PAPERS){
+    const qs=QUESTIONS.filter(x=>x.p===k), b=document.createElement("button"); b.className="opt";
+    b.textContent=`${PAPERS[k]} (${qs.length})` + (best[k]!=null?`  · best ${best[k]}`:"");
+    b.onclick=()=>start(qs,k); $("papers").appendChild(b);
+  }
+  show("home");
+}
+let mode="ALL";
+function start(qs,m){
+  mode=m; list=[...qs].sort(()=>Math.random()-.5); i=0; right=0; render(); show("quiz");
+}
+function render(){
+  const q=list[i]; locked=false;
+  $("qmeta").textContent=`Question ${i+1} of ${list.length}`;
+  $("bar").style.width=(i/list.length*100)+"%";
+  $("qtext").textContent=q.q; $("fb").innerHTML=""; $("next").classList.add("hide");
+  $("opts").innerHTML="";
+  q.o.forEach((t,j)=>{
+    const b=document.createElement("button"); b.className="opt"; b.textContent=`${"ABCD"[j]}) ${t}`;
+    b.onclick=()=>answer(j); $("opts").appendChild(b);
+  });
+}
+function answer(j){
+  if(locked) return; locked=true;
+  const q=list[i], btns=[...$("opts").children], good=j===q.a;
+  btns[q.a].classList.add("ok"); if(!good) btns[j].classList.add("bad");
+  let wrong=store.get("wrong",[]);
+  if(good){ right++; wrong=wrong.filter(k=>k!==key(q));
+    $("fb").innerHTML=`<div class="msg ok">${pick(CORRECT)}<small>${q.e}</small></div>`;
+  } else { if(!wrong.includes(key(q))) wrong.push(key(q));
+    $("fb").innerHTML=`<div class="msg bad">${pick(WRONG)}<small>Correct answer: <b>${"ABCD"[q.a]}) ${q.o[q.a]}</b><br>${q.e}</small></div>`;
+  }
+  store.set("wrong",wrong);
+  $("next").textContent = i+1<list.length ? "Next" : "See result"; $("next").classList.remove("hide");
+}
+$("next").onclick=()=>{ i++; if(i<list.length) render(); else finish(); };
+function finish(){
+  const pct=Math.round(right/list.length*100), best=store.get("best",{});
+  if(mode!=="RETRY" && (best[mode]==null||right>best[mode])){best[mode]=right;store.set("best",best);}
+  $("score").textContent=`You scored ${right} / ${list.length} (${pct}%)`;
+  $("doneMsg").innerHTML = pct>=70 ? `<div class="msg ok">Super ${NAME}! 💖 That's a passing-level score. Keep it up!</div>`
+    : `<div class="msg bad">Try a bit more, ${NAME}! 🤗 Retry your wrong answers and you will do better.</div>`;
+  show("done");
+}
+$("again").onclick=()=>{ mode==="RETRY"?retry():start(mode==="ALL"?QUESTIONS:QUESTIONS.filter(x=>x.p===mode),mode); };
+$("homeBtn").onclick=home; $("quit").onclick=home;
+function retry(){ const w=store.get("wrong",[]); const qs=QUESTIONS.filter(q=>w.includes(key(q))); if(!qs.length) return home(); start(qs,"RETRY"); }
+$("retryWrong").onclick=retry;
+
+function login(){
+  if($("uid").value.trim()===UID && $("pw").value===PW){ store.set("in",true); $("lerr").textContent=""; home(); }
+  else $("lerr").textContent="Wrong ID or password, try again.";
+}
+$("lbtn").onclick=login; $("pw").onkeydown=e=>{if(e.key==="Enter")login()};
+$("logout").onclick=()=>{store.set("in",false);$("pw").value="";show("login")};
+if(store.get("in",false)) home(); else show("login");
+</script></body></html>
