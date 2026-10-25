@@ -41,6 +41,9 @@ a.btn{display:inline-block;text-decoration:none;text-align:center;border-radius:
   <div class="mute" id="stats"></div>
   <div id="papers"></div>
   <div class="row" style="margin-top:14px">
+    <a class="btn" href="revise.html">📘 Notes &amp; Current Updates (scroll)</a>
+  </div>
+  <div class="row" style="margin-top:10px">
     <button class="alt" id="retryWrong">Retry my wrong answers</button>
     <a class="btn" href="JAIIB_Important_Questions.pdf" download>Download PDF</a>
   </div>
@@ -62,6 +65,7 @@ a.btn{display:inline-block;text-decoration:none;text-align:center;border-radius:
 
 </div>
 <script src="questions.js"></script>
+<script src="questions_ieifs_extra.js"></script>
 <script>
 // Change these two to rename / re-word the cheering. NAME is the pet name used in every message.
 const NAME = "wife";
@@ -91,6 +95,10 @@ function home(){
   const all = document.createElement("button"); all.className="opt";
   all.textContent=`All papers mixed (${QUESTIONS.length} questions)` + (best.ALL!=null?`  · best ${best.ALL}`:"");
   all.onclick=()=>start(QUESTIONS,"ALL"); $("papers").appendChild(all);
+  const ex=QUESTIONS.filter(x=>x.y);
+  const eb=document.createElement("button"); eb.className="opt";
+  eb.textContent=`IE & IFS – exam-style practice (${ex.length})`+(best.PYQ!=null?`  · best ${best.PYQ}`:"");
+  eb.onclick=()=>start(ex,"PYQ"); $("papers").appendChild(eb);
   for(const k in PAPERS){
     const qs=QUESTIONS.filter(x=>x.p===k), b=document.createElement("button"); b.className="opt";
     b.textContent=`${PAPERS[k]} (${qs.length})` + (best[k]!=null?`  · best ${best[k]}`:"");
@@ -135,7 +143,7 @@ function finish(){
     : `<div class="msg bad">Try a bit more, ${NAME}! 🤗 Retry your wrong answers and you will do better.</div>`;
   show("done");
 }
-$("again").onclick=()=>{ mode==="RETRY"?retry():start(mode==="ALL"?QUESTIONS:QUESTIONS.filter(x=>x.p===mode),mode); };
+$("again").onclick=()=>{ mode==="RETRY"?retry():start(mode==="ALL"?QUESTIONS:mode==="PYQ"?QUESTIONS.filter(x=>x.y):QUESTIONS.filter(x=>x.p===mode),mode); };
 $("homeBtn").onclick=home; $("quit").onclick=home;
 function retry(){ const w=store.get("wrong",[]); const qs=QUESTIONS.filter(q=>w.includes(key(q))); if(!qs.length) return home(); start(qs,"RETRY"); }
 $("retryWrong").onclick=retry;
