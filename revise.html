@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>JAIIB Quick Revise</title>
+<style>
+:root{--bg:#fdf3f7;--card:#fff;--ink:#2b2030;--mute:#7b6a80;--pri:#b3326e;--line:#ecd9e3;--hi:#fff3b0}
+@media (prefers-color-scheme:dark){:root{--bg:#1c141f;--card:#2a1f2e;--ink:#f4e9f3;--mute:#b3a0b6;--pri:#ec6fa6;--line:#43324a;--hi:#5a4b00}}
+*{box-sizing:border-box}html{scroll-behavior:smooth;scroll-padding-top:120px}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:system-ui,Segoe UI,Arial,sans-serif;line-height:1.5}
+.wrap{max-width:760px;margin:0 auto;padding:0 16px 60px}
+header{position:sticky;top:0;background:var(--bg);padding:10px 0;border-bottom:1px solid var(--line);z-index:5}
+.top{display:flex;justify-content:space-between;align-items:center;gap:8px}
+h1{margin:0;font-size:1.25rem;color:var(--pri)}
+a.home{color:var(--pri);font-weight:600;text-decoration:none;border:1px solid var(--pri);border-radius:10px;padding:6px 12px}
+nav{display:flex;gap:6px;overflow-x:auto;padding:8px 0 2px}
+nav a{white-space:nowrap;text-decoration:none;color:var(--ink);background:var(--card);border:1px solid var(--line);border-radius:20px;padding:5px 12px;font-size:.9rem}
+input{width:100%;padding:9px 12px;margin-top:6px;border:1px solid var(--line);border-radius:10px;font-size:1rem;background:var(--card);color:var(--ink)}
+h2{color:var(--pri);margin:28px 0 6px;font-size:1.3rem}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px 16px;margin:10px 0}
+.card h3{margin:0 0 6px;font-size:1.02rem}
+ul{margin:0;padding-left:20px}li{margin:4px 0}
+.mute{color:var(--mute);font-size:.88rem}
+mark{background:var(--hi);color:inherit;border-radius:3px}
+.hide{display:none}
+</style></head><body><div class="wrap">
+<header>
+  <div class="top"><h1>JAIIB IE&amp;IFS – Quick Revise</h1><a class="home" href="index.html">Home</a></div>
+  <nav id="nav"></nav>
+  <input id="q" placeholder="Search notes (e.g. NPS, repo, MSME)…">
+</header>
+<div id="out"></div>
+</div>
+<script src="notes.js"></script>
+<script>
+try{ if(!JSON.parse(localStorage.getItem("in"))) location.replace("index.html"); }catch(e){ location.replace("index.html"); }
+const esc=s=>s.replace(/&/g,"&amp;").replace(/</g,"&lt;");
+let h="",nav='<a href="#cur">Current updates</a>';
+h+=`<h2 id="cur" data-s="1">📰 Current Updates <span class="mute">(as on ${CURRENT.asOf})</span></h2>`;
+CURRENT.sections.forEach(s=>{h+=`<div class="card"><h3>${esc(s.h)}</h3><ul>${s.pts.map(p=>`<li>${esc(p)}</li>`).join("")}</ul></div>`});
+h+=`<p class="mute">${esc(CURRENT.note)}</p>`;
+NOTES.forEach(m=>{
+  nav+=`<a href="#m${m.m}">Module ${m.m}</a>`;
+  h+=`<h2 id="m${m.m}">Module ${m.m}: ${esc(m.title)}</h2>`;
+  m.units.forEach(u=>{h+=`<div class="card"><h3>${esc(u.n)}</h3><ul>${u.pts.map(p=>`<li>${esc(p)}</li>`).join("")}</ul></div>`});
+});
+document.getElementById("nav").innerHTML=nav;
+const out=document.getElementById("out"); out.innerHTML=h;
+const cards=[...out.querySelectorAll(".card")]; const orig=cards.map(c=>c.innerHTML);
+document.getElementById("q").oninput=e=>{
+  const t=e.target.value.trim().toLowerCase();
+  cards.forEach((c,i)=>{
+    c.innerHTML=orig[i];
+    if(!t){c.classList.remove("hide");return}
+    const hit=c.textContent.toLowerCase().includes(t);
+    c.classList.toggle("hide",!hit);
+    if(hit){const re=new RegExp(t.replace(/[.*+?^${}()|[\]\\]/g,"\\$&"),"gi");
+      c.querySelectorAll("li,h3").forEach(n=>{n.innerHTML=n.innerHTML.replace(re,m=>`<mark>${m}</mark>`)});}
+  });
+};
+</script></body></html>
