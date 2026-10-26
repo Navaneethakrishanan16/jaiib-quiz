@@ -41,6 +41,8 @@ a.btn{display:inline-block;text-decoration:none;text-align:center;border-radius:
   <div class="mute" id="stats"></div>
   <div id="papers"></div>
   <div class="row" style="margin-top:14px">
+    <a class="btn" href="JAIIB_IEIFS_Practice_Bank.pdf" download>⬇ IE&amp;IFS practice questions PDF</a>
+    <a class="btn" href="JAIIB_IEIFS_Practice_Set2.pdf" download>⬇ Practice Set 2 PDF (400)</a>
     <a class="btn" href="revise.html">📘 Notes &amp; Current Updates (scroll)</a>
   </div>
   <div class="row" style="margin-top:10px">
@@ -66,6 +68,8 @@ a.btn{display:inline-block;text-decoration:none;text-align:center;border-radius:
 </div>
 <script src="questions.js"></script>
 <script src="questions_ieifs_extra.js"></script>
+<script src="questions_ieifs_bank.js"></script>
+<script src="questions_ieifs_set2.js"></script>
 <script>
 // Change these two to rename / re-word the cheering. NAME is the pet name used in every message.
 const NAME = "wife";
@@ -95,10 +99,30 @@ function home(){
   const all = document.createElement("button"); all.className="opt";
   all.textContent=`All papers mixed (${QUESTIONS.length} questions)` + (best.ALL!=null?`  · best ${best.ALL}`:"");
   all.onclick=()=>start(QUESTIONS,"ALL"); $("papers").appendChild(all);
-  const ex=QUESTIONS.filter(x=>x.y);
+  const ex=QUESTIONS.filter(x=>x.y&&!x.s2), ex2=QUESTIONS.filter(x=>x.s2);
   const eb=document.createElement("button"); eb.className="opt";
   eb.textContent=`IE & IFS – exam-style practice (${ex.length})`+(best.PYQ!=null?`  · best ${best.PYQ}`:"");
   eb.onclick=()=>start(ex,"PYQ"); $("papers").appendChild(eb);
+  const rnd=document.createElement("button"); rnd.className="opt";
+  rnd.textContent="IE & IFS – quick test: 25 random questions";
+  rnd.onclick=()=>start([...ex].sort(()=>Math.random()-.5).slice(0,25),"RND25"); $("papers").appendChild(rnd);
+  const MN={A:"Module A – Indian Economic Architecture",B:"Module B – Economic Concepts Related to Banking",C:"Module C – Indian Financial Architecture",D:"Module D – Financial Products and Services"};
+  for(const g in MN){
+    const mq=ex.filter(x=>x.g===g), mb=document.createElement("button"); mb.className="opt";
+    mb.textContent=MN[g]+" ("+mq.length+")"+(best["M"+g]!=null?"  · best "+best["M"+g]:"");
+    mb.onclick=()=>start(mq,"M"+g); $("papers").appendChild(mb);
+  }
+  const hd=document.createElement("div"); hd.className="mute"; hd.style.margin="16px 0 4px"; hd.textContent="⭐ IE & IFS Practice Set 2 – "+ex2.length+" new questions"; $("papers").appendChild(hd);
+  const r2=document.createElement("button"); r2.className="opt";
+  r2.textContent="Set 2 – quick test: 25 random questions"; r2.onclick=()=>start([...ex2].sort(()=>Math.random()-.5).slice(0,25),"S2RND"); $("papers").appendChild(r2);
+  const a2=document.createElement("button"); a2.className="opt";
+  a2.textContent="Set 2 – all "+ex2.length+" questions"+(best.S2ALL!=null?"  · best "+best.S2ALL:""); a2.onclick=()=>start(ex2,"S2ALL"); $("papers").appendChild(a2);
+  for(const g in MN){
+    const mq=ex2.filter(x=>x.g===g), mb=document.createElement("button"); mb.className="opt";
+    mb.textContent="Set 2 – "+MN[g]+" ("+mq.length+")"+(best["S2"+g]!=null?"  · best "+best["S2"+g]:"");
+    mb.onclick=()=>start(mq,"S2"+g); $("papers").appendChild(mb);
+  }
+  const hd2=document.createElement("div"); hd2.className="mute"; hd2.style.margin="16px 0 4px"; hd2.textContent="All papers"; $("papers").appendChild(hd2);
   for(const k in PAPERS){
     const qs=QUESTIONS.filter(x=>x.p===k), b=document.createElement("button"); b.className="opt";
     b.textContent=`${PAPERS[k]} (${qs.length})` + (best[k]!=null?`  · best ${best[k]}`:"");
@@ -106,9 +130,10 @@ function home(){
   }
   show("home");
 }
+const shufOpts=q=>{const idx=q.o.map((_,i)=>i).sort(()=>Math.random()-.5);return Object.assign({},q,{o:idx.map(i=>q.o[i]),a:idx.indexOf(q.a)})};
 let mode="ALL";
 function start(qs,m){
-  mode=m; list=[...qs].sort(()=>Math.random()-.5); i=0; right=0; render(); show("quiz");
+  mode=m; list=[...qs].sort(()=>Math.random()-.5).map(shufOpts); i=0; right=0; render(); show("quiz");
 }
 function render(){
   const q=list[i]; locked=false;
@@ -143,7 +168,7 @@ function finish(){
     : `<div class="msg bad">Try a bit more, ${NAME}! 🤗 Retry your wrong answers and you will do better.</div>`;
   show("done");
 }
-$("again").onclick=()=>{ mode==="RETRY"?retry():start(mode==="ALL"?QUESTIONS:mode==="PYQ"?QUESTIONS.filter(x=>x.y):QUESTIONS.filter(x=>x.p===mode),mode); };
+$("again").onclick=()=>{ mode==="RETRY"?retry():start(mode==="ALL"?QUESTIONS:mode==="PYQ"?QUESTIONS.filter(x=>x.y&&!x.s2):mode==="S2ALL"?QUESTIONS.filter(x=>x.s2):mode==="S2RND"?QUESTIONS.filter(x=>x.s2).sort(()=>Math.random()-.5).slice(0,25):/^S2[ABCD]$/.test(mode)?QUESTIONS.filter(x=>x.s2&&x.g===mode[2]):mode==="RND25"?QUESTIONS.filter(x=>x.y&&!x.s2).sort(()=>Math.random()-.5).slice(0,25):/^M[ABCD]$/.test(mode)?QUESTIONS.filter(x=>x.y&&!x.s2&&x.g===mode[1]):QUESTIONS.filter(x=>x.p===mode),mode); };
 $("homeBtn").onclick=home; $("quit").onclick=home;
 function retry(){ const w=store.get("wrong",[]); const qs=QUESTIONS.filter(q=>w.includes(key(q))); if(!qs.length) return home(); start(qs,"RETRY"); }
 $("retryWrong").onclick=retry;
